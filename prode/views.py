@@ -60,7 +60,7 @@ class GoodsList(APIView):
         )
 
         goods_pages.append(goods_cur_page)
-        data['cur_page'] = goods_cur_page
+        data['cur_page'] = [goods_cur_page]
 
         for goods_page_data in goods_page_div('.pagnLink'):
             goods_page = int(pq(pq(goods_page_data).html()).text())
