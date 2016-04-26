@@ -6,3 +6,5 @@ db.sqlite3
 prode/migrations/*
 static/*
 demo/*
+flash/settings.py
+flash/constant.py
