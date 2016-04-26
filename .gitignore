@@ -8,3 +8,4 @@ static/*
 demo/*
 flash/settings.py
 flash/constant.py
+flash/uwsgi.ini
