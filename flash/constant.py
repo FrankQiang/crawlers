@@ -1,5 +1,4 @@
 LOCAL_HOST = 'http://127.0.0.1:8080'
 SINGLE_URL = LOCAL_HOST+'/prode/single/?url='
-PAGE_URL = LOCAL_HOST+'/prode/?page_url='
 AMAZON_HOST = 'http://www.amazon.com'
-AMAZON_URL = AMAZON_HOST+'/s/ref=nb_sb_noss?url=search-alias%3Daps&field-keywords='
+AMAZON_URL = AMAZON_HOST+'/s?ie=UTF8&page={page}&rh=i:aps,k:{keywords}'

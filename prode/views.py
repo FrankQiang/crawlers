@@ -8,75 +8,80 @@ from flash import constant
 
 class GoodsList(APIView):
 
-    def get_url(self, keywords, page, source='amazon'):
-        amazon_url = constant.AMAZON_HOST+'/s?ie=UTF8&page='+str(page)+'&rh=i:aps,k:'+keywords
+    def get_url(self, keywords, page, source):
+        amazon_url = constant.AMAZON_URL.format(page=page, keywords=keywords)
         data = {
             'amazon': amazon_url,
         }
         return data[source]
 
-    def get_data(self, url):
+    def get_amazon_data(self, data, html):
+        goods_div = html('#atfResults')
+        i = 0
+        for goods_li_data in goods_div('li'):
+            goods_li = pq(pq(goods_li_data).html())
+            goods_data = pq(
+                pq(goods_li('.a-fixed-left-grid-inner')).html()
+            )
+            if goods_data:
+                data['results'][i] = {}
+                goods_img = pq(pq(goods_data('.a-col-left')).html())
+                goods_url = pq(goods_img('a')).attr('href')
+                goods_small_img_url = pq(goods_img('img')).attr('src')
+
+                goods_info = pq(pq(goods_data('.a-col-right')).html())
+                goods_title_div = pq(goods_info('.a-spacing-small').html())
+                goods_title = pq(goods_title_div('a')).attr('title')
+                goods_price_div = pq(goods_info('.a-span7').html())
+                goods_price_div_a = pq(
+                    goods_price_div('.a-spacing-none').html()
+                )
+                goods_price = goods_price_div_a('a').text()
+                goods_des_div = pq(goods_info('.a-span5').html())
+                goods_des = pq(
+                    goods_des_div('.a-text-bold').nextAll()
+                ).text()
+
+                img_params = goods_small_img_url.split('_AC_US160_.jpg')
+                img_large_params = '_SX425_.jpg'
+                goods_large_img_url = img_params[0]+img_large_params
+                if goods_title:
+                    data['results'][i]['url'] = constant.SINGLE_URL+goods_url
+                    data['results'][i]['goods_s_img_url'] = goods_small_img_url
+                    data['results'][i]['goods_l_img_url'] = goods_large_img_url
+                    data['results'][i]['goods_title'] = goods_title
+                    data['results'][i]['goods_price'] = goods_price
+                    data['results'][i]['goods_des'] = goods_des
+                    i += 1
+        goods_page_div = html('#bottomBar')
+        goods_pages = []
+        goods_cur_page = int(
+            pq(pq(goods_page_div('.pagnCur')).html()).text()
+        )
+
+        goods_pages.append(goods_cur_page)
+        data['cur_page'] = goods_cur_page
+
+        for goods_page_data in goods_page_div('.pagnLink'):
+            goods_page = int(pq(pq(goods_page_data).html()).text())
+            goods_pages.append(goods_page)
+
+        goods_last_page = pq(
+            pq(goods_page_div('.pagnDisabled')).html()
+        ).text()
+        if goods_last_page:
+            goods_pages.append(int(goods_last_page))
+        data['pages'] = sorted(goods_pages)
+        return data
+
+    def get_data(self, url, source):
         r = requests.get(url)
         data = {}
         data['results'] = {}
         if r.status_code == 200:
             html = pq(r.text)
-            goods_div = html('#atfResults')
-            i = 0
-            for goods_li_data in goods_div('li'):
-                goods_li = pq(pq(goods_li_data).html())
-                goods_data = pq(
-                    pq(goods_li('.a-fixed-left-grid-inner')).html()
-                )
-                if goods_data:
-                    data['results'][i] = {}
-                    goods_img = pq(pq(goods_data('.a-col-left')).html())
-                    goods_url = pq(goods_img('a')).attr('href')
-                    goods_small_img_url = pq(goods_img('img')).attr('src')
-
-                    goods_info = pq(pq(goods_data('.a-col-right')).html())
-                    goods_title_div = pq(goods_info('.a-spacing-small').html())
-                    goods_title = pq(goods_title_div('a')).attr('title')
-                    goods_price_div = pq(goods_info('.a-span7').html())
-                    goods_price_div_a = pq(
-                        goods_price_div('.a-spacing-none').html()
-                    )
-                    goods_price = goods_price_div_a('a').text()
-                    goods_des_div = pq(goods_info('.a-span5').html())
-                    goods_des = pq(
-                        goods_des_div('.a-text-bold').nextAll()
-                    ).text()
-
-                    img_params = goods_small_img_url.split('_AC_US160_.jpg')
-                    img_large_params = '_SX425_.jpg'
-                    goods_large_img_url = img_params[0]+img_large_params
-                    if goods_title:
-                        data['results'][i]['url'] = constant.SINGLE_URL+goods_url
-                        data['results'][i]['goods_s_img_url'] = goods_small_img_url
-                        data['results'][i]['goods_l_img_url'] = goods_large_img_url
-                        data['results'][i]['goods_title'] = goods_title
-                        data['results'][i]['goods_price'] = goods_price
-                        data['results'][i]['goods_des'] = goods_des
-                        i += 1
-            goods_page_div = html('#bottomBar')
-            goods_pages = []
-            goods_cur_page = int(
-                pq(pq(goods_page_div('.pagnCur')).html()).text()
-            )
-
-            goods_pages.append(goods_cur_page)
-            data['cur_page'] = goods_cur_page
-
-            for goods_page_data in goods_page_div('.pagnLink'):
-                goods_page = int(pq(pq(goods_page_data).html()).text())
-                goods_pages.append(goods_page)
-
-            goods_last_page = pq(
-                pq(goods_page_div('.pagnDisabled')).html()
-            ).text()
-            if goods_last_page:
-                goods_pages.append(int(goods_last_page))
-            data['pages'] = sorted(goods_pages)
+            if source == 'amazon':
+                data = self.get_amazon_data(data, html)
             return data
         else:
             return data
@@ -86,13 +91,22 @@ class GoodsList(APIView):
             page = request.GET.get('page')
         else:
             page = 1
+
+        if request.GET.get('source'):
+            source = request.GET.get('source')
+        else:
+            source = 'amazon'
+
         if request.GET.get('keywords'):
             keywords = request.query_params['keywords']
-        url = self.get_url(keywords, page)
-        data = self.get_data(url)
+        else:
+            keywords = 'iphone'
+
+        url = self.get_url(keywords, page, source)
+        data = self.get_data(url, source)
         # try again
         if not data:
-            data = self.get_data(url)
+            data = self.get_data(url, source)
 
         return Response(data)
 
