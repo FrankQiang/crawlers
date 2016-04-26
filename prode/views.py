@@ -77,8 +77,8 @@ class GoodsList(APIView):
     def get_data(self, url, source):
         r = requests.get(url)
         data = {}
-        data['results'] = {}
         if r.status_code == 200:
+            data['results'] = {}
             html = pq(r.text)
             if source == 'amazon':
                 data = self.get_amazon_data(data, html)
@@ -113,12 +113,9 @@ class GoodsList(APIView):
 
 class Single(APIView):
 
-    def get_data(self, url):
-        r = requests.get(url)
-        data = {}
-        if r.status_code == 200:
-            html = pq(r.text)
-            goods_left_col = html('#leftCol')
+    def get_amazon_data(self, data, html):
+        goods_left_col = html('#leftCol')
+        if goods_left_col:
             goods_center_col = html('#centerCol')
             goods_img_div = pq(
                 pq(goods_left_col('#main-image-container')).html()
@@ -131,15 +128,33 @@ class Single(APIView):
             data['goods_price'] = goods_price
             data['goods_title'] = goods_title
             data['goods_img_url'] = goods_img_url
+        return data
+
+    def get_data(self, url, source):
+        r = requests.get(url)
+        data = {}
+        if r.status_code == 200:
+            html = pq(r.text)
+            if source == 'amazon':
+                data = self.get_amazon_data(data, html)
             return data
         else:
             return data
 
     def get(self, request, format=None):
-        url = request.query_params['url']
-        data = self.get_data(url)
+        if request.GET.get('url'):
+            url = request.GET.get('url')
+        else:
+            return Response({})
+
+        if request.GET.get('source'):
+            source = request.GET.get('source')
+        else:
+            source = 'amazon'
+
+        data = self.get_data(url, source)
         if not data:
-            data = self.get_data(url)
+            data = self.get_data(url, source)
         if data:
             goods = Goods(
                 title=data['goods_title'],
