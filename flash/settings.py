@@ -80,7 +80,7 @@ WSGI_APPLICATION = 'flash.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.dummy',
+        'ENGINE': '',
     }
 }
 
@@ -127,10 +127,4 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-
-
-MONGODB_DATABASES = {
-    'default': {'name': 'flash'}
-}
-
-mongoengine.connect("flash")
+mongoengine.connect("flash", username='flash', password='flash')
