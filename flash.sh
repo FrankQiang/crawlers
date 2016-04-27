@@ -1,5 +1,5 @@
 start(){
-    supervisorctl -c /etc/supervisord.conf restart flash
+    supervisorctl -c /etc/supervisord.conf start flash
 }
 
 stop(){
@@ -9,6 +9,10 @@ stop(){
 case "$1" in
   start) start ;;
   stop) stop ;;
+  restart)
+    stop
+    start
+    ;;
   *)  
     echo "Usage:"
     echo "./flash.sh start"
