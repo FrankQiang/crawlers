@@ -26,6 +26,8 @@ class GoodsList(APIView):
 
     def get_amazon_data(self, data, html):
         goods_div = html('#atfResults')
+        if not goods_div:
+            return data
         i = 0
         for goods_li_data in goods_div('li'):
             goods_li = pq(pq(goods_li_data).html())
@@ -33,7 +35,6 @@ class GoodsList(APIView):
                 pq(goods_li('.a-fixed-left-grid-inner')).html()
             )
             if goods_data:
-                data['results'][i] = {}
                 goods_img = pq(pq(goods_data('.a-col-left')).html())
                 goods_url = pq(goods_img('a')).attr('href')
                 goods_small_img_url = pq(goods_img('img')).attr('src')
@@ -42,9 +43,14 @@ class GoodsList(APIView):
                 goods_title_div = pq(goods_info('.a-spacing-small').html())
                 goods_title = pq(goods_title_div('a')).attr('title')
                 goods_price_div = pq(goods_info('.a-span7').html())
-                goods_price_div_a = pq(
-                    goods_price_div('.a-spacing-none').html()
-                )
+                goods_price_divs = goods_price_div('.a-spacing-none')
+                if len(goods_price_divs) > 1:
+                    goods_price_second = goods_price_divs[1]
+                    goods_price_div_a = pq(pq(goods_price_second).html())
+                else:
+                    goods_price_div_a = pq(
+                        goods_price_div('.a-spacing-none').html()
+                    )
                 goods_price = goods_price_div_a('a').text()
                 goods_des_div = pq(goods_info('.a-span5').html())
                 goods_des = pq(
@@ -56,6 +62,7 @@ class GoodsList(APIView):
                 goods_large_img_url = img_params[0]+img_large_params
                 goods_price_status = self.valid_price(goods_price)
                 if goods_price and goods_title and goods_price_status:
+                    data['results'][i] = {}
                     data['results'][i]['url'] = constant.SINGLE_URL+goods_url
                     data['results'][i]['goods_s_img_url'] = goods_small_img_url
                     data['results'][i]['goods_l_img_url'] = goods_large_img_url
@@ -92,6 +99,8 @@ class GoodsList(APIView):
             html = pq(r.text)
             if source == 'amazon':
                 data = self.get_amazon_data(data, html)
+            if not data['results']:
+                data = {}
             return data
         else:
             return data
@@ -108,7 +117,7 @@ class GoodsList(APIView):
             source = 'amazon'
 
         if request.GET.get('keywords'):
-            keywords = request.query_params['keywords']
+            keywords = request.GET.get('keywords').encode('utf8')
         else:
             keywords = 'iphone'
 
@@ -163,6 +172,7 @@ class Single(APIView):
             source = 'amazon'
 
         data = self.get_data(url, source)
+        # try again
         if not data:
             data = self.get_data(url, source)
         if data:
