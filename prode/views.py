@@ -15,6 +15,15 @@ class GoodsList(APIView):
         }
         return data[source]
 
+    def valid_price(self, price):
+        total = 1
+        for currency in constant.CURRENCY:
+            total *= price.find(currency)
+        if total == 0:
+            return True
+        else:
+            return False
+
     def get_amazon_data(self, data, html):
         goods_div = html('#atfResults')
         i = 0
@@ -45,7 +54,8 @@ class GoodsList(APIView):
                 img_params = goods_small_img_url.split('_AC_US160_.jpg')
                 img_large_params = '_SX425_.jpg'
                 goods_large_img_url = img_params[0]+img_large_params
-                if goods_title:
+                goods_price_status = self.valid_price(goods_price)
+                if goods_price and goods_title and goods_price_status:
                     data['results'][i]['url'] = constant.SINGLE_URL+goods_url
                     data['results'][i]['goods_s_img_url'] = goods_small_img_url
                     data['results'][i]['goods_l_img_url'] = goods_large_img_url
