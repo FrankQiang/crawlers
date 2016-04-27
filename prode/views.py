@@ -60,16 +60,18 @@ class GoodsList(APIView):
                 img_params = goods_small_img_url.split('_AC_US160_.jpg')
                 img_large_params = '_SX425_.jpg'
                 goods_large_img_url = img_params[0]+img_large_params
-                goods_price_status = self.valid_price(goods_price)
-                if goods_price and goods_title and goods_price_status:
-                    data['results'][i] = {}
-                    data['results'][i]['url'] = constant.SINGLE_URL+goods_url
-                    data['results'][i]['goods_s_img_url'] = goods_small_img_url
-                    data['results'][i]['goods_l_img_url'] = goods_large_img_url
-                    data['results'][i]['goods_title'] = goods_title
+                data['results'][i] = {}
+                data['results'][i]['local_url'] = constant.SINGLE_URL+goods_url
+                data['results'][i]['url'] = goods_url.split('.com/')[1]
+                data['results'][i]['goods_s_img_url'] = goods_small_img_url
+                data['results'][i]['goods_l_img_url'] = goods_large_img_url
+                data['results'][i]['goods_title'] = goods_title
+                data['results'][i]['goods_des'] = goods_des
+                if goods_price and self.valid_price(goods_price):
                     data['results'][i]['goods_price'] = goods_price
-                    data['results'][i]['goods_des'] = goods_des
-                    i += 1
+                else:
+                    data['results'][i]['goods_price'] = 0.00
+                i += 1
         goods_page_div = html('#bottomBar')
         goods_pages = []
         goods_cur_page = int(
@@ -99,8 +101,6 @@ class GoodsList(APIView):
             html = pq(r.text)
             if source == 'amazon':
                 data = self.get_amazon_data(data, html)
-            if not data['results']:
-                data = {}
             return data
         else:
             return data
@@ -122,10 +122,13 @@ class GoodsList(APIView):
             keywords = 'iphone'
 
         url = self.get_url(keywords, page, source)
-        data = self.get_data(url, source)
-        # try again
-        if not data:
-            data = self.get_data(url, source)
+
+        data = {}
+        for time in range(constant.REQUEST_TIMES):
+            if data:
+                break
+            else:
+                data = self.get_data(url, source)
 
         return Response(data)
 
@@ -171,10 +174,12 @@ class Single(APIView):
         else:
             source = 'amazon'
 
-        data = self.get_data(url, source)
-        # try again
-        if not data:
-            data = self.get_data(url, source)
+        data = {}
+        for time in range(constant.REQUEST_TIMES):
+            if data:
+                break
+            else:
+                data = self.get_data(url, source)
         if data:
             goods = Goods(
                 title=data['goods_title'],
