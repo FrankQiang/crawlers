@@ -187,3 +187,58 @@ class Single(APIView):
             goods.save()
         url_data = {'url': url}
         return Response(url_data)
+
+
+class Index(APIView):
+
+    def get_amazon_index_data(self, data, html):
+        center_div = html('#zg_centerListWrapper')
+        i = 0
+        if center_div:
+            goods_divs = center_div('.zg_itemImmersion')
+            for goods_div in goods_divs:
+                goods_div_data = pq(pq(goods_div).html())
+                goods_img_div = pq(pq(goods_div_data('.zg_image')).html())
+                goods_url = pq(goods_img_div('a')).attr('href')
+                goods_url = goods_url.replace('\n', '')
+
+                goods_img_url = pq(goods_img_div('img')).attr('src')
+
+                goods_title_div = pq(pq(goods_div_data('.zg_title')).html())
+                goods_title = goods_title_div.text()
+
+                goods_price_div = pq(pq(goods_div_data('.price')).html())
+                goods_price = goods_price_div.text()
+                data['results'][i] = {}
+                data['results'][i]['goods_title'] = goods_title
+                data['results'][i]['goods_price'] = goods_price
+                data['results'][i]['goods_url'] = goods_url
+                data['results'][i]['goods_img_url'] = goods_img_url
+                i += 1
+        return data
+
+    def get_data(self, url, source):
+        r = requests.get(url)
+        data = {}
+        if r.status_code == 200:
+            data['results'] = {}
+            html = pq(r.text)
+            if source == 'amazon':
+                data = self.get_amazon_index_data(data, html)
+            return data
+        else:
+            return data
+
+    def get(self, request, format=None):
+        if request.GET.get('source'):
+            source = request.GET.get('source')
+        else:
+            source = 'amazon'
+
+        data = {}
+        for time in range(constant.REQUEST_TIMES):
+            if data:
+                break
+            else:
+                data = self.get_data(constant.AMAZON_INDEX, source)
+        return Response(data)
