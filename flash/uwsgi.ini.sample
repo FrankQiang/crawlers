@@ -1,6 +1,10 @@
 [uwsgi]
+workers         = 1 
+max-requests    = 30000
+enable-threads  = true
+close-on-exec   = true
 chdir           = /opt/dev/flash
-module          = flash.wsgi
+module          = flash.wsgi:application
 master          = true
 processes       = 1
 socket          = /tmp/flash.sock

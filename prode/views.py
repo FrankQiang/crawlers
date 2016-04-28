@@ -35,42 +35,40 @@ class GoodsList(APIView):
                 pq(goods_li('.a-fixed-left-grid-inner')).html()
             )
             if goods_data:
+                data['results'][i] = {}
                 goods_img = pq(pq(goods_data('.a-col-left')).html())
                 goods_url = pq(goods_img('a')).attr('href')
                 goods_small_img_url = pq(goods_img('img')).attr('src')
 
                 goods_info = pq(pq(goods_data('.a-col-right')).html())
-                goods_title_div = pq(goods_info('.a-spacing-small').html())
-                goods_title = pq(goods_title_div('a')).attr('title')
+                goods_title = goods_info('h2').text()
+                goods_price = 0
                 goods_price_div = pq(goods_info('.a-span7').html())
-                goods_price_divs = goods_price_div('.a-spacing-none')
-                if len(goods_price_divs) > 1:
-                    goods_price_second = goods_price_divs[1]
-                    goods_price_div_a = pq(pq(goods_price_second).html())
-                else:
-                    goods_price_div_a = pq(
-                        goods_price_div('.a-spacing-none').html()
-                    )
-                goods_price = goods_price_div_a('a').text()
+                goods_price_divs = goods_price_div('.a-row')
+                for goods_price_div_space in goods_price_divs:
+                    goods_price_div_a = pq(pq(goods_price_div_space).html())
+                    goods_price = goods_price_div_a('a').text()
+                    if self.valid_price(goods_price):
+                        data['results'][i]['goods_price'] = goods_price
+                        break
+                    else:
+                        data['results'][i]['goods_price'] = 0.00
+
                 goods_des_div = pq(goods_info('.a-span5').html())
                 goods_des = pq(
                     goods_des_div('.a-text-bold').nextAll()
                 ).text()
 
-                img_params = goods_small_img_url.split('_AC_US160_.jpg')
-                img_large_params = '_SX425_.jpg'
-                goods_large_img_url = img_params[0]+img_large_params
-                data['results'][i] = {}
+                goods_large_img_url = goods_small_img_url.replace(
+                    '_AC_US160_', '_SX425_'
+                )
                 data['results'][i]['local_url'] = constant.SINGLE_URL+goods_url
-                data['results'][i]['url'] = goods_url.split('.com/')[1]
+                if len(goods_url.split('.com/')) > 1:
+                    data['results'][i]['url'] = goods_url.split('.com/')[1]
                 data['results'][i]['goods_s_img_url'] = goods_small_img_url
                 data['results'][i]['goods_l_img_url'] = goods_large_img_url
                 data['results'][i]['goods_title'] = goods_title
                 data['results'][i]['goods_des'] = goods_des
-                if goods_price and self.valid_price(goods_price):
-                    data['results'][i]['goods_price'] = goods_price
-                else:
-                    data['results'][i]['goods_price'] = 0.00
                 i += 1
         goods_page_div = html('#bottomBar')
         goods_pages = []
