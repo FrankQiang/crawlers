@@ -154,6 +154,7 @@ class Single(APIView):
         r = requests.get(url)
         data = {}
         if r.status_code == 200:
+            data['prode'] = {}
             html = pq(r.text)
             if source == 'amazon':
                 data = self.get_amazon_data(data, html)
@@ -178,7 +179,7 @@ class Single(APIView):
                 break
             else:
                 data = self.get_data(url, source)
-        if data:
+        if data and data.get('goods_price'):
             goods = Goods(
                 title=data['goods_title'],
                 price=data['goods_price'],
@@ -212,7 +213,7 @@ class Index(APIView):
                 data['results'][i] = {}
                 data['results'][i]['goods_title'] = goods_title
                 data['results'][i]['goods_price'] = goods_price
-                data['results'][i]['goods_url'] = goods_url
+                data['results'][i]['local_url'] = constant.SINGLE_URL+goods_url
                 data['results'][i]['goods_img_url'] = goods_img_url
                 if len(goods_url.split('.com/')) > 1:
                     data['results'][i]['url'] = goods_url.split('.com/')[1]
