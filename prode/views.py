@@ -214,6 +214,8 @@ class Index(APIView):
                 data['results'][i]['goods_price'] = goods_price
                 data['results'][i]['goods_url'] = goods_url
                 data['results'][i]['goods_img_url'] = goods_img_url
+                if len(goods_url.split('.com/')) > 1:
+                    data['results'][i]['url'] = goods_url.split('.com/')[1]
                 i += 1
         return data
 
