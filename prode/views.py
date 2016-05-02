@@ -10,8 +10,13 @@ from flash import constant
 
 class GoodsList(APIView):
 
-    def get_url(self, keywords, page, source):
-        amazon_url = constant.AMAZON_URL.format(page=page, keywords=keywords)
+    def get_url(self, keywords, page, brand, sort, source):
+        amazon_url = constant.AMAZON_URL.format(
+            page=page,
+            keywords=keywords,
+            sort=sort,
+            brand=brand
+        )
         data = {
             'amazon': amazon_url,
         }
@@ -27,12 +32,9 @@ class GoodsList(APIView):
             return False
 
     def get_amazon_data(self, data, html):
-        goods_div = html('#atfResults')
-        if not goods_div:
-            return data
         i = 0
-        for goods_li_data in goods_div('li'):
-            goods_li = pq(pq(goods_li_data).html())
+        for result_num in range(20):
+            goods_li = pq(html('#result_'+str(result_num)))
             goods_data = pq(
                 pq(goods_li('.a-fixed-left-grid-inner')).html()
             )
@@ -72,6 +74,10 @@ class GoodsList(APIView):
                 data['results'][i]['goods_title'] = goods_title
                 data['results'][i]['goods_des'] = goods_des
                 i += 1
+        data['brand'] = []
+        brands = pq(html('#ref_2528832011'))
+        for brand in brands('li'):
+            data['brand'].append(pq(brand).text())
         goods_page_div = html('#bottomBar')
         goods_pages = []
         goods_cur_page = int(
@@ -94,7 +100,7 @@ class GoodsList(APIView):
         return data
 
     def get_data(self, url, source):
-        r = requests.get(url)
+        r = requests.get(url, headers=constant.AMAZON_HEADERS)
         data = {}
         if r.status_code == 200:
             data['results'] = {}
@@ -121,7 +127,17 @@ class GoodsList(APIView):
         else:
             keywords = 'iphone'
 
-        url = self.get_url(keywords, page, source)
+        if request.GET.get('sort'):
+            sort = request.GET.get('sort')
+        else:
+            sort = ''
+
+        if request.GET.get('brand'):
+            brand = request.GET.get('brand')
+        else:
+            brand = ''
+
+        url = self.get_url(keywords, page, brand, sort, source)
 
         data = {}
         for time in range(constant.REQUEST_TIMES):

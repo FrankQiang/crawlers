@@ -1,7 +1,19 @@
 LOCAL_HOST = 'http://127.0.0.1:8080'
 SINGLE_URL = LOCAL_HOST+'/prode/single/?url='
 AMAZON_HOST = 'http://www.amazon.com'
-AMAZON_URL = AMAZON_HOST+'/s?ie=UTF8&page={page}&rh=i:aps,k:{keywords}'
+AMAZON_URL = AMAZON_HOST+'/s?ie=UTF8&page={page}&rh=i:aps,k:{keywords}&,p_89:{brand}&sort={sort}'
 AMAZON_INDEX = AMAZON_HOST+'/Best-Sellers-Electronics/zgbs/electronics/'
+AMAZON_iMG_MIN_SIZE = '_SX38_SY50_CR,0,0,38,50_'
+AMAZON_iMG_SMA_SIZE = '_AC_US160_'
+AMAZON_iMG_MED_SIZE = '_SX425_'
 CURRENCY = '$￥£'
 REQUEST_TIMES = 5
+
+AMAZON_HEADERS = {
+    "Host": "www.amazon.com",
+    "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:43.0) Gecko/20100101 Firefox/43.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate",
+    "Connection": "keep-alive",
+}
