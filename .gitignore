@@ -9,3 +9,4 @@ demo/*
 flash/settings.py
 flash/constant.py
 flash/uwsgi.ini
+logs/uwsgi.log
