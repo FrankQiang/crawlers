@@ -1,6 +1,8 @@
 import requests
 from pyquery import PyQuery as pq
+from mongoengine import NotUniqueError
 from rest_framework.views import APIView
+from rest_framework import status
 from rest_framework.response import Response
 from prode.models import Goods
 from flash import constant
@@ -60,7 +62,7 @@ class GoodsList(APIView):
                 ).text()
 
                 goods_large_img_url = goods_small_img_url.replace(
-                    '_AC_US160_', '_SX425_'
+                    constant.AMAZON_iMG_SMA_SIZE, constant.AMAZON_iMG_MED_SIZE
                 )
                 data['results'][i]['local_url'] = constant.SINGLE_URL+goods_url
                 if len(goods_url.split('.com/')) > 1:
@@ -115,7 +117,7 @@ class GoodsList(APIView):
             source = 'amazon'
 
         if request.GET.get('keywords'):
-            keywords = request.GET.get('keywords').encode('utf8')
+            keywords = request.GET.get('keywords')
         else:
             keywords = 'iphone'
 
@@ -134,27 +136,41 @@ class GoodsList(APIView):
 class Single(APIView):
 
     def get_amazon_data(self, data, html):
+        nav = pq(html('#nav-subnav'))
         goods_left_col = html('#leftCol')
-        if goods_left_col:
-            goods_center_col = html('#centerCol')
-            goods_img_div = pq(
-                pq(goods_left_col('#main-image-container')).html()
+        # goods_center_col = html('#centerCol')
+        goods_type = pq(nav('a:first')).text()
+
+        goods_img_div = pq(
+            pq(goods_left_col('#altImages')).html()
+        )
+        goods_imgs = goods_img_div('img')
+        data['goods_imgs'] = []
+        for goods_img in goods_imgs:
+            goods_img_url = pq(goods_img).attr('src').replace(
+                constant.AMAZON_iMG_MIN_SIZE, constant.AMAZON_iMG_MED_SIZE
             )
-            goods_img_url = pq(goods_img_div('img:first')).attr('src')
-            goods_title = pq(goods_img_div('img:first')).attr('alt')
-            goods_price = pq(
-                pq(goods_center_col('#priceblock_ourprice')).html()
-            ).text()
-            data['goods_price'] = goods_price
-            data['goods_title'] = goods_title
-            data['goods_img_url'] = goods_img_url
+            data['goods_imgs'].append(goods_img_url)
+
+        goods_title = pq(html('#title')).text()
+        goods_brand = pq(html('#brand')).text()
+        goods_price = html('#priceblock_ourprice').text()
+
+        data['goods_title'] = goods_title
+        data['goods_type'] = goods_type
+        data['goods_price'] = goods_price
+        data['goods_brand'] = goods_brand
+        if len(data['goods_imgs']) > 1:
+            data['goods_img_url'] = data['goods_imgs'][0]
+        else:
+            data['goods_img_url'] = ''
         return data
 
     def get_data(self, url, source):
         r = requests.get(url)
         data = {}
         if r.status_code == 200:
-            data['prode'] = {}
+            data['id'] = url.split('/')[-1]
             html = pq(r.text)
             if source == 'amazon':
                 data = self.get_amazon_data(data, html)
@@ -166,7 +182,8 @@ class Single(APIView):
         if request.GET.get('url'):
             url = request.GET.get('url')
         else:
-            return Response({})
+            content = {'mes': 'Not url'}
+            return Response(status.HTTP_400_BAD_REQUEST)
 
         if request.GET.get('source'):
             source = request.GET.get('source')
@@ -181,13 +198,28 @@ class Single(APIView):
                 data = self.get_data(url, source)
         if data and data.get('goods_price'):
             goods = Goods(
+                source=source,
+                goods_id=data['id'],
+                goods_url=url,
                 title=data['goods_title'],
+                goods_type=data['goods_type'],
                 price=data['goods_price'],
-                image_link=data['goods_img_url']
+                image_link=data['goods_img_url'],
+                brand=data['goods_brand'],
+                images=data['goods_imgs']
             )
-            goods.save()
-        url_data = {'url': url}
-        return Response(url_data)
+            try:
+                goods.save()
+                content = {'url': url}
+                re_status = status.HTTP_200_OK
+            except NotUniqueError:
+                content = {'mes': 'Goods alread exist'}
+                re_status = status.HTTP_500_INTERNAL_SERVER_ERROR
+        else:
+            content = {'mes': 'Get data error'}
+            re_status = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        return Response(content, status=re_status)
 
 
 class Index(APIView):
