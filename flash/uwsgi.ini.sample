@@ -11,3 +11,4 @@ socket          = /tmp/flash.sock
 chmod-socket    = 664
 chown-socket    = www-data:www-data
 vacuum          = true
+daemonize       = /opt/dev/flash/logs/uwsgi.log
