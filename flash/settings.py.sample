@@ -38,8 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'flash',
     'prode',
+    'django_crontab',
     'rest_framework',
 ]
 
@@ -131,3 +131,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 mongoengine.connect("flash", username='flash', password='flash')
+
+CRONJOBS = [
+    ('*/1 * * * *', 'prode.cron.get_goods_price', '> /tmp/flash_crontab.log')
+]

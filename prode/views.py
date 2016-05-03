@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from prode.models import Goods
 from flash import constant
+from prode.serializers import GoodsSerializer
 
 
 class GoodsList(APIView):
@@ -183,12 +184,12 @@ class Single(APIView):
         return data
 
     def get_data(self, url, source):
-        r = requests.get(url)
+        r = requests.get(url, headers=constant.AMAZON_HEADERS)
         data = {}
         if r.status_code == 200:
-            data['id'] = url.split('/')[-1]
             html = pq(r.text)
             if source == 'amazon':
+                data['id'] = url.split('/ref')[0].split('/')[-1]
                 data = self.get_amazon_data(data, html)
             return data
         else:
@@ -292,4 +293,12 @@ class Index(APIView):
                 break
             else:
                 data = self.get_data(constant.AMAZON_INDEX, source)
+        return Response(data)
+
+
+class History(APIView):
+
+    def get(self, request, format=None):
+        goods = Goods.objects.all()
+        data = GoodsSerializer(goods, many=True).data
         return Response(data)
