@@ -5,3 +5,4 @@ pyquery==1.2.13
 pymongo==2.8
 mongoengine==0.8.0
 uWSGI==2.0.12
+djangorestframework-jsonp==1.0.2

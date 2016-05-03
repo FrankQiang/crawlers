@@ -1,14 +1,19 @@
 start(){
-    supervisorctl -c /etc/supervisord.conf start flash
+    uwsgi --ini ./flash/uwsgi.ini
 }
 
 stop(){
-    supervisorctl -c /etc/supervisord.conf stop flash
+    uwsgi --stop /tmp/flash.pid
+}
+
+reload(){
+    uwsgi --reload /tmp/flash.pid
 }
 
 case "$1" in
   start) start ;;
   stop) stop ;;
+  reload) reload ;;
   restart)
     stop
     start
@@ -17,6 +22,7 @@ case "$1" in
     echo "Usage:"
     echo "./flash.sh start"
     echo "./flash.sh stop"
+    echo "./flash.sh reload"
     exit 1
     ;;  
 esac
