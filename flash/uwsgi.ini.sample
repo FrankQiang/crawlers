@@ -13,3 +13,4 @@ chown-socket    = www-data:www-data
 vacuum          = true
 daemonize       = /opt/dev/flash/logs/uwsgi.log
 home            = /opt/dev/flash/env
+pidfile         = /tmp/flash.pid
