@@ -34,7 +34,11 @@ class GoodsList(APIView):
 
     def get_amazon_data(self, data, html):
         i = 0
-        for result_num in range(20):
+        goods_ul = html('#s-results-list-atf')
+        goods_li_first = goods_ul('li:first')
+        goods_li_first_num = int(goods_li_first.attr('id').split('_')[1])
+        goods_li_last_num = goods_li_first_num + 20
+        for result_num in range(goods_li_first_num, goods_li_last_num):
             goods_li = pq(html('#result_'+str(result_num)))
             goods_data = pq(
                 pq(goods_li('.a-fixed-left-grid-inner')).html()
