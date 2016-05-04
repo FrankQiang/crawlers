@@ -22,6 +22,8 @@ class Amazon(object):
 
     def get_amazon_data(self, data, html):
         goods_price = html('#priceblock_ourprice').text()
+        if not goods_price:
+            goods_price = html('#priceblock_saleprice').text()
         data['price'] = goods_price
         return data
 
