@@ -4,7 +4,7 @@ from mongoengine import NotUniqueError
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
-from prode.models import Goods
+from prode.models import Goods, Sku
 from flash import constant
 from prode.serializers import GoodsSerializer
 
@@ -85,15 +85,18 @@ class GoodsList(APIView):
             data['brand'].append(pq(brand).text())
         goods_page_div = html('#bottomBar')
         goods_pages = []
-        goods_cur_page = int(
-            pq(pq(goods_page_div('.pagnCur')).html()).text()
-        )
+
+        goods_cur_page = pq(pq(goods_page_div('.pagnCur')).html()).text()
+        if goods_cur_page:
+            goods_cur_page = int(goods_cur_page)
 
         goods_pages.append(goods_cur_page)
         data['cur_page'] = [goods_cur_page]
 
         for goods_page_data in goods_page_div('.pagnLink'):
-            goods_page = int(pq(pq(goods_page_data).html()).text())
+            goods_page = pq(pq(goods_page_data).html()).text()
+            if goods_page:
+                goods_page = int(goods_page)
             goods_pages.append(goods_page)
 
         goods_last_page = pq(
@@ -185,6 +188,9 @@ class Single(APIView):
             data['goods_img_url'] = data['goods_imgs'][0]
         else:
             data['goods_img_url'] = ''
+
+        goods_size_div = pq(html('#variation_size_name'))
+        goods_color_div = pq(html('#variation_color_name'))
         return data
 
     def get_data(self, url, source):
