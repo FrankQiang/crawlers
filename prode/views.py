@@ -82,7 +82,9 @@ class GoodsList(APIView):
         data['brand'] = []
         brands = pq(html('#ref_2528832011'))
         for brand in brands('li'):
-            data['brand'].append(pq(brand).text())
+            brand = pq(brand)
+            if brand('.refinementImage'):
+                data['brand'].append(brand.text())
         goods_page_div = html('#bottomBar')
         goods_pages = []
 
