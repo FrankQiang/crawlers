@@ -4,7 +4,7 @@ from mongoengine import NotUniqueError
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
-from prode.models import Goods, Sku
+from prode.models import Goods
 from flash import constant
 from prode.serializers import GoodsSerializer
 
@@ -35,6 +35,8 @@ class GoodsList(APIView):
     def get_amazon_data(self, data, html):
         i = 0
         goods_ul = html('#s-results-list-atf')
+        if not goods_ul:
+            return data
         goods_li_first = goods_ul('li:first')
         goods_li_first_num = int(goods_li_first.attr('id').split('_')[1])
         goods_li_last_num = goods_li_first_num + 20
@@ -191,8 +193,8 @@ class Single(APIView):
         else:
             data['goods_img_url'] = ''
 
-        goods_size_div = pq(html('#variation_size_name'))
-        goods_color_div = pq(html('#variation_color_name'))
+        #goods_size_div = pq(html('#variation_size_name'))
+        #goods_color_div = pq(html('#variation_color_name'))
         return data
 
     def get_data(self, url, source):
