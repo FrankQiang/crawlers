@@ -4,7 +4,8 @@ from mongoengine import NotUniqueError
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
-from prode.models import Goods
+from django.core.paginator import Paginator
+from prode.models import Goods, Sku, Specs
 from flash import constant
 from prode.serializers import GoodsSerializer
 
@@ -76,6 +77,10 @@ class GoodsList(APIView):
                 data['results'][i]['local_url'] = constant.SINGLE_URL+goods_url
                 if len(goods_url.split('.com/')) > 1:
                     data['results'][i]['url'] = goods_url.split('.com/')[1]
+                else:
+                    data['results'].pop(i)
+                    break
+
                 data['results'][i]['goods_s_img_url'] = goods_small_img_url
                 data['results'][i]['goods_l_img_url'] = goods_large_img_url
                 data['results'][i]['goods_title'] = goods_title
@@ -183,6 +188,8 @@ class Single(APIView):
         goods_title = pq(html('#title')).text()
         goods_brand = pq(html('#brand')).text()
         goods_price = html('#priceblock_ourprice').text()
+        if not goods_price:
+            goods_price = html('#priceblock_saleprice').text()
 
         data['goods_title'] = goods_title
         data['goods_type'] = goods_type
@@ -193,8 +200,39 @@ class Single(APIView):
         else:
             data['goods_img_url'] = ''
 
-        #goods_size_div = pq(html('#variation_size_name'))
-        #goods_color_div = pq(html('#variation_color_name'))
+        goods_twister_feature = html('#twister_feature_div')
+        if goods_twister_feature:
+            data['sku'] = []
+            goods_size_div = pq(html('#variation_size_name'))
+            goods_color_div = pq(html('#variation_color_name'))
+            if goods_color_div and not goods_size_div:
+                goods_color_lis = pq(goods_color_div('li'))
+                for goods_color_li in goods_color_lis:
+                    goods_color_li = pq(goods_color_li)
+                    goods_color = goods_color_li('img').attr('alt')
+                    goods_color_price = pq(
+                        goods_color_li('#'+goods_color_li.attr('id')+'_price')
+                    ).text()
+                    sku = {}
+                    sku['price'] = goods_color_price
+                    sku['union_type'] = []
+                    sku['union_type'].append(goods_color)
+                    data['sku'].append(sku)
+        goods_params = pq(html('#productDetails_detailBullets_sections1'))
+        if goods_params:
+            data['params'] = []
+            goods_params_trs = pq(goods_params('tr'))
+            for goods_params_tr in goods_params_trs:
+                param = []
+                goods_params_tr = pq(goods_params_tr)
+                goods_params_th = goods_params_tr('th').text()
+                goods_params_td = goods_params_tr('td').text()
+                if len(goods_params_td) > constant.STR_LEN:
+                    continue
+                param.append(goods_params_th)
+                param.append(goods_params_td)
+                data['params'].append(param)
+
         return data
 
     def get_data(self, url, source):
@@ -227,6 +265,9 @@ class Single(APIView):
                 break
             else:
                 data = self.get_data(url, source)
+        if not data.get('goods_price') and data.get('sku'):
+            data['goods_price'] = data['sku'][0]['price']
+
         if data and data.get('goods_price'):
             goods = Goods(
                 source=source,
@@ -239,6 +280,18 @@ class Single(APIView):
                 brand=data['goods_brand'],
                 images=data['goods_imgs']
             )
+            if data['sku']:
+                for sku_data in data['sku']:
+                    sku = Sku(
+                        union_type=sku_data['union_type'],
+                        price=sku_data['price']
+                    )
+                    goods.sku.append(sku)
+
+            if data['params']:
+                for param in data['params']:
+                    specs = Specs(params_title=param[0], params_con=param[1])
+                    goods.specs.append(specs)
             try:
                 goods.save()
                 content = {'url': url}
@@ -313,6 +366,18 @@ class Index(APIView):
 class History(APIView):
 
     def get(self, request, format=None):
+        if request.GET.get('page'):
+            page = request.GET.get('page')
+        else:
+            page = 1
         goods = Goods.objects.all()
-        data = GoodsSerializer(goods, many=True).data
+        data_all = GoodsSerializer(goods, many=True).data
+        page_size = constant.PAGE_SIZE
+        paginator = Paginator(data_all, page_size)
+        page_total = paginator.num_pages
+        page_each = paginator.page(page)
+        page_data = page_each.object_list
+        data = {}
+        data['page_total'] = page_total
+        data['results'] = page_data
         return Response(data)

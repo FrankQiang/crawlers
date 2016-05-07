@@ -6,11 +6,12 @@ from mongoengine import EmbeddedDocument
 
 class Sku(EmbeddedDocument):
     union_type = fields.ListField(fields.StringField(max_length=50))
-    price = fields.FloatField(default=0.0)
+    price = fields.StringField(max_length=100)
 
 
 class Specs(EmbeddedDocument):
-    params = fields.DictField()
+    params_title = fields.StringField(max_length=100)
+    params_con = fields.StringField(max_length=100)
 
 
 class Offer(EmbeddedDocument):
@@ -53,7 +54,7 @@ class Goods(Document):
     shipping_label = fields.StringField(max_length=100)
     multipack = fields.StringField(max_length=100)
     sku = fields.ListField(fields.EmbeddedDocumentField(Sku))
-    specs = fields.EmbeddedDocumentField(Specs)
+    specs = fields.ListField(fields.EmbeddedDocumentField(Specs))
     description = fields.StringField(max_length=1024)
     offer = fields.DateTimeField(Offer)
     price_history = fields.ListField(

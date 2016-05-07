@@ -25,6 +25,27 @@ class Amazon(object):
         if not goods_price:
             goods_price = html('#priceblock_saleprice').text()
         data['price'] = goods_price
+        goods_twister_feature = html('#twister_feature_div')
+        if goods_twister_feature:
+            data['sku'] = []
+            goods_size_div = pq(html('#variation_size_name'))
+            goods_color_div = pq(html('#variation_color_name'))
+            if goods_color_div and not goods_size_div:
+                goods_color_lis = pq(goods_color_div('li'))
+                for goods_color_li in goods_color_lis:
+                    goods_color_li = pq(goods_color_li)
+                    goods_color = goods_color_li('img').attr('alt')
+                    goods_color_price = pq(
+                        goods_color_li('#'+goods_color_li.attr('id')+'_price')
+                    ).text()
+                    sku = {}
+                    sku['price'] = goods_color_price
+                    sku['union_type'] = []
+                    sku['union_type'].append(goods_color)
+                    data['sku'].append(sku)
+        if not data.get('goods_price') and data['sku']:
+            data['goods_price'] = data['sku'][0]['price']
+
         return data
 
     def get_data(self, url, source):
