@@ -363,7 +363,7 @@ class Index(APIView):
         return Response(data)
 
 
-class History(APIView):
+class Product(APIView):
 
     def get(self, request, format=None):
         if request.GET.get('page'):
@@ -377,7 +377,34 @@ class History(APIView):
         page_total = paginator.num_pages
         page_each = paginator.page(page)
         page_data = page_each.object_list
+        for page_each_data in page_data:
+            page_each_data['price_history'] = []
         data = {}
         data['page_total'] = page_total
         data['results'] = page_data
+        return Response(data)
+
+
+class History(APIView):
+
+    def get(self, request, format=None):
+        if request.GET.get('page'):
+            page = request.GET.get('page')
+        else:
+            page = 1
+        if request.GET.get('id'):
+            id = request.GET.get('id')
+            goods = Goods.objects.get(id=id)
+            goods_data = GoodsSerializer(goods).data
+            price_all_data = goods_data['price_history']
+            page_size = constant.PAGE_SIZE
+            paginator = Paginator(price_all_data, page_size)
+            page_total = paginator.num_pages
+            page_each = paginator.page(page)
+            page_data = page_each.object_list
+            data = {}
+            data['page_total'] = page_total
+            data['results'] = page_data
+        else:
+            data = []
         return Response(data)
