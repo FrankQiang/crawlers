@@ -380,7 +380,7 @@ class Product(APIView):
         for page_each_data in page_data:
             page_each_data['price_history'] = []
         data = {}
-        data['page_total'] = page_total
+        data['page_total'] = [page_total]
         data['results'] = page_data
         return Response(data)
 
@@ -403,7 +403,7 @@ class History(APIView):
             page_each = paginator.page(page)
             page_data = page_each.object_list
             data = {}
-            data['page_total'] = page_total
+            data['page_total'] = [page_total]
             data['results'] = page_data
         else:
             data = []
