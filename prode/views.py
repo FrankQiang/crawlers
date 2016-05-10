@@ -50,7 +50,7 @@ class GoodsList(APIView):
                 goods_url = pq(goods_a('a')).attr('href')
                 goods_small_img_url = pq(goods_img('img')).attr('src')
 
-                goods_title = goods_li('h2').text()
+                goods_title = goods_li('h2').attr('data-attribute')
                 goods_price = 0
                 goods_price_spans = pq(goods_li('.a-color-price').html())
                 for goods_price_span in goods_price_spans:
