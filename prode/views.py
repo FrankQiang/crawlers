@@ -48,28 +48,23 @@ class GoodsList(APIView):
             )
             if goods_data:
                 data['results'][i] = {}
-                goods_img = pq(pq(goods_data('.a-col-left')).html())
-                goods_url = pq(goods_img('a')).attr('href')
+                goods_img = pq(goods_li('img'))
+                goods_a = pq(goods_li('img').parents('a'))
+                goods_url = pq(goods_a('a')).attr('href')
                 goods_small_img_url = pq(goods_img('img')).attr('src')
 
-                goods_info = pq(pq(goods_data('.a-col-right')).html())
-                goods_title = goods_info('h2').text()
+                goods_title = goods_li('h2').text()
                 goods_price = 0
-                goods_price_div = pq(goods_info('.a-span7').html())
-                goods_price_divs = goods_price_div('.a-row')
-                for goods_price_div_space in goods_price_divs:
-                    goods_price_div_a = pq(pq(goods_price_div_space).html())
-                    goods_price = goods_price_div_a('a').text()
+                goods_price_spans = pq(goods_li('.a-color-price').html())
+                for goods_price_span in goods_price_spans:
+                    goods_price = pq(goods_price_span).text()
                     if self.valid_price(goods_price):
                         data['results'][i]['goods_price'] = goods_price
-                        break
+                        continue
                     else:
                         data['results'][i]['goods_price'] = 0.00
 
-                goods_des_div = pq(goods_info('.a-span5').html())
-                goods_des = pq(
-                    goods_des_div('.a-text-bold').nextAll()
-                ).text()
+                goods_des = goods_li('em').parents('span').text()
 
                 goods_large_img_url = goods_small_img_url.replace(
                     constant.AMAZON_iMG_SMA_SIZE, constant.AMAZON_iMG_MED_SIZE
@@ -79,7 +74,7 @@ class GoodsList(APIView):
                     data['results'][i]['url'] = goods_url.split('.com/')[1]
                 else:
                     data['results'].pop(i)
-                    break
+                    continue
 
                 data['results'][i]['goods_s_img_url'] = goods_small_img_url
                 data['results'][i]['goods_l_img_url'] = goods_large_img_url
