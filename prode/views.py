@@ -315,6 +315,8 @@ class Index(APIView):
 
                 goods_title_div = pq(pq(goods_div_data('.zg_title')).html())
                 goods_title = goods_title_div.text()
+                if goods_title:
+                    goods_title = goods_title.split('...')[0]
 
                 goods_price_div = pq(pq(goods_div_data('.price')).html())
                 goods_price = goods_price_div.text()
