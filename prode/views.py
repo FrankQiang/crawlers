@@ -43,10 +43,7 @@ class GoodsList(APIView):
         goods_li_last_num = goods_li_first_num + 20
         for result_num in range(goods_li_first_num, goods_li_last_num):
             goods_li = pq(html('#result_'+str(result_num)))
-            goods_data = pq(
-                pq(goods_li('.a-fixed-left-grid-inner')).html()
-            )
-            if goods_data:
+            if goods_li:
                 data['results'][i] = {}
                 goods_img = pq(goods_li('img'))
                 goods_a = pq(goods_li('img').parents('a'))
