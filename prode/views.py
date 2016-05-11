@@ -310,6 +310,8 @@ class Index(APIView):
                 goods_url = goods_div('a').attr('href')
                 goods_url = goods_url.replace('\n', '')
                 goods_img_url = goods_div('img').attr('src')
+                goods_img_url = goods_img_url.replace(
+                    constant.AMAZON_iMG_SSS_SIZE, constant.AMAZON_iMG_SMS_SIZE)
                 goods_title = goods_div('a').attr('title')
                 goods_price = pq(goods_div('.zg_morePrice')).text()
                 data['results'][i] = {}
