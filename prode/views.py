@@ -301,25 +301,17 @@ class Single(APIView):
 class Index(APIView):
 
     def get_amazon_index_data(self, data, html):
-        center_div = html('#zg_centerListWrapper')
+        right_div = html('#zg_col2')
         i = 0
-        if center_div:
-            goods_divs = center_div('.zg_itemImmersion')
+        if right_div:
+            goods_divs = right_div('.zg_more_item')
             for goods_div in goods_divs:
-                goods_div_data = pq(pq(goods_div).html())
-                goods_img_div = pq(pq(goods_div_data('.zg_image')).html())
-                goods_url = pq(goods_img_div('a')).attr('href')
+                goods_div = pq(goods_div)
+                goods_url = goods_div('a').attr('href')
                 goods_url = goods_url.replace('\n', '')
-
-                goods_img_url = pq(goods_img_div('img')).attr('src')
-
-                goods_title_div = pq(pq(goods_div_data('.zg_title')).html())
-                goods_title = goods_title_div.text()
-                if goods_title:
-                    goods_title = goods_title.split('...')[0]
-
-                goods_price_div = pq(pq(goods_div_data('.price')).html())
-                goods_price = goods_price_div.text()
+                goods_img_url = goods_div('img').attr('src')
+                goods_title = goods_div('a').attr('title')
+                goods_price = pq(goods_div('.zg_morePrice')).text()
                 data['results'][i] = {}
                 data['results'][i]['goods_title'] = goods_title
                 data['results'][i]['goods_price'] = goods_price
