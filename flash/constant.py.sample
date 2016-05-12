@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 LOCAL_HOST = 'http://127.0.0.1:8080'
-SINGLE_URL = LOCAL_HOST+'/prode/single/?url='
+SINGLE_URL = LOCAL_HOST+'/prode/single/?url={url}&source={source}'
 AMAZON_HOST_US = 'http://www.amazon.com'
 AMAZON_HOST_UK = 'http://www.amazon.co.uk'
 AMAZON_URL_US = AMAZON_HOST_US+'/s?url=search-alias=aps&page={page}&rh=i:aps,k:{keywords},p_89:{brand}&sort={sort}'

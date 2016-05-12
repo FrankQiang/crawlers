@@ -40,7 +40,7 @@ class GoodsList(APIView):
         else:
             return False
 
-    def get_amazon_data(self, data, html):
+    def get_amazon_data(self, data, html, source):
         i = 0
         goods_ul = html('#s-results-list-atf')
         if not goods_ul:
@@ -73,7 +73,10 @@ class GoodsList(APIView):
                 goods_large_img_url = goods_small_img_url.replace(
                     constant.AMAZON_iMG_SMA_SIZE, constant.AMAZON_iMG_MED_SIZE
                 )
-                data['results'][i]['local_url'] = constant.SINGLE_URL+goods_url
+                data['results'][i]['local_url'] = constant.SINGLE_URL.format(
+                    url=goods_url,
+                    source=source,
+                )
                 if goods_url.find('.com/') > 0:
                     data['results'][i]['url'] = goods_url.split('.com/')[1]
                 elif goods_url.find('.co.uk/') > 0:
@@ -126,7 +129,7 @@ class GoodsList(APIView):
             if r.status_code == 200:
                 data['results'] = {}
                 html = pq(r.text)
-                data = self.get_amazon_data(data, html)
+                data = self.get_amazon_data(data, html, source)
                 return data
             else:
                 return data
@@ -135,7 +138,7 @@ class GoodsList(APIView):
             if r.status_code == 200:
                 data['results'] = {}
                 html = pq(r.text)
-                data = self.get_amazon_data(data, html)
+                data = self.get_amazon_data(data, html, source)
                 return data
             else:
                 return data
