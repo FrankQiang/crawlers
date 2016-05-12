@@ -13,16 +13,23 @@ from prode.serializers import GoodsSerializer
 class GoodsList(APIView):
 
     def get_url(self, keywords, page, brand, sort, source):
-        amazon_url = constant.AMAZON_URL.format(
-            page=page,
-            keywords=keywords,
-            sort=sort,
-            brand=brand
-        )
-        data = {
-            'amazon': amazon_url,
-        }
-        return data[source]
+        if source == 'amazon_us':
+            url = constant.AMAZON_URL_US.format(
+                page=page,
+                keywords=keywords,
+                sort=sort,
+                brand=brand
+            )
+        elif source == 'amazon_uk':
+            url = constant.AMAZON_URL_UK.format(
+                page=page,
+                keywords=keywords,
+                sort=sort,
+                brand=brand
+            )
+        else:
+            url = constant.AMAZON_HOST_US
+        return url
 
     def valid_price(self, price):
         total = 1
@@ -67,8 +74,10 @@ class GoodsList(APIView):
                     constant.AMAZON_iMG_SMA_SIZE, constant.AMAZON_iMG_MED_SIZE
                 )
                 data['results'][i]['local_url'] = constant.SINGLE_URL+goods_url
-                if len(goods_url.split('.com/')) > 1:
+                if goods_url.find('.com/') > 0:
                     data['results'][i]['url'] = goods_url.split('.com/')[1]
+                elif goods_url.find('.co.uk/') > 0:
+                    data['results'][i]['url'] = goods_url.split('.co.uk/')[1]
                 else:
                     data['results'].pop(i)
                     continue
@@ -80,6 +89,8 @@ class GoodsList(APIView):
                 i += 1
         data['brand'] = []
         brands = pq(html('#ref_2528832011'))
+        if not brands:
+            brands = pq(html('#ref_1632651031'))
         for brand in brands('li'):
             brand = pq(brand)
             if brand('.refinementImage'):
@@ -109,14 +120,25 @@ class GoodsList(APIView):
         return data
 
     def get_data(self, url, source):
-        r = requests.get(url, headers=constant.AMAZON_HEADERS)
         data = {}
-        if r.status_code == 200:
-            data['results'] = {}
-            html = pq(r.text)
-            if source == 'amazon':
+        if source == 'amazon_us':
+            r = requests.get(url, headers=constant.AMAZON_HEADERS_US)
+            if r.status_code == 200:
+                data['results'] = {}
+                html = pq(r.text)
                 data = self.get_amazon_data(data, html)
-            return data
+                return data
+            else:
+                return data
+        elif source == 'amazon_uk':
+            r = requests.get(url, headers=constant.AMAZON_HEADERS_UK)
+            if r.status_code == 200:
+                data['results'] = {}
+                html = pq(r.text)
+                data = self.get_amazon_data(data, html)
+                return data
+            else:
+                return data
         else:
             return data
 
@@ -129,7 +151,7 @@ class GoodsList(APIView):
         if request.GET.get('source'):
             source = request.GET.get('source')
         else:
-            source = 'amazon'
+            source = 'amazon_us'
 
         if request.GET.get('keywords'):
             keywords = request.GET.get('keywords')
@@ -228,14 +250,27 @@ class Single(APIView):
         return data
 
     def get_data(self, url, source):
-        r = requests.get(url, headers=constant.AMAZON_HEADERS)
         data = {}
-        if r.status_code == 200:
-            html = pq(r.text)
-            if source == 'amazon':
+        if source == 'amazon_us':
+            r = requests.get(url, headers=constant.AMAZON_HEADERS_US)
+            if r.status_code == 200:
+                data['results'] = {}
+                html = pq(r.text)
                 data['id'] = url.split('/ref')[0].split('/')[-1]
                 data = self.get_amazon_data(data, html)
-            return data
+                return data
+            else:
+                return data
+        elif source == 'amazon_uk':
+            r = requests.get(url, headers=constant.AMAZON_HEADERS_UK)
+            if r.status_code == 200:
+                data['results'] = {}
+                html = pq(r.text)
+                data['id'] = url.split('/ref')[0].split('/')[-1]
+                data = self.get_amazon_data(data, html)
+                return data
+            else:
+                return data
         else:
             return data
 
@@ -249,7 +284,7 @@ class Single(APIView):
         if request.GET.get('source'):
             source = request.GET.get('source')
         else:
-            source = 'amazon'
+            source = 'amazon_us'
 
         data = {}
         for time in range(constant.REQUEST_TIMES):
@@ -272,7 +307,7 @@ class Single(APIView):
                 brand=data['goods_brand'],
                 images=data['goods_imgs']
             )
-            if data['sku']:
+            if data.get('sku'):
                 for sku_data in data['sku']:
                     sku = Sku(
                         union_type=sku_data['union_type'],
@@ -280,7 +315,7 @@ class Single(APIView):
                     )
                     goods.sku.append(sku)
 
-            if data['params']:
+            if data.get('params'):
                 for param in data['params']:
                     specs = Specs(params_title=param[0], params_con=param[1])
                     goods.specs.append(specs)
@@ -300,7 +335,7 @@ class Single(APIView):
 
 class Index(APIView):
 
-    def get_amazon_index_data(self, data, html):
+    def get_amazon_data(self, data, html):
         right_div = html('#zg_col2')
         i = 0
         if right_div:
@@ -325,13 +360,17 @@ class Index(APIView):
         return data
 
     def get_data(self, url, source):
-        r = requests.get(url)
         data = {}
-        if r.status_code == 200:
-            data['results'] = {}
-            html = pq(r.text)
-            if source == 'amazon':
-                data = self.get_amazon_index_data(data, html)
+        if source == 'amazon_us':
+            r = requests.get(url, headers=constant.AMAZON_HEADERS_US)
+            if r.status_code == 200:
+                data['results'] = {}
+                html = pq(r.text)
+                data = self.get_amazon_data(data, html)
+                return data
+            else:
+                return data
+        elif source == 'amazon_uk':
             return data
         else:
             return data
@@ -340,14 +379,15 @@ class Index(APIView):
         if request.GET.get('source'):
             source = request.GET.get('source')
         else:
-            source = 'amazon'
+            pass
+        source = 'amazon_us'
 
         data = {}
         for time in range(constant.REQUEST_TIMES):
             if data:
                 break
             else:
-                data = self.get_data(constant.AMAZON_INDEX, source)
+                data = self.get_data(constant.AMAZON_INDEX_US, source)
         return Response(data)
 
 
