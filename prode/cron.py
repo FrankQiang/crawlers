@@ -49,14 +49,25 @@ class Amazon(object):
         return data
 
     def get_data(self, url, source):
-        r = requests.get(url)
         data = {}
-        if r.status_code == 200:
-            data['prode'] = ''
-            html = pq(r.text)
-            if source == 'amazon':
+        if source == 'amazon_us':
+            r = requests.get(url, headers=constant.AMAZON_HEADERS_US)
+            if r.status_code == 200:
+                data['prode'] = ''
+                html = pq(r.text)
                 data = self.get_amazon_data(data, html)
-            return data
+                return data
+            else:
+                return data
+        elif source == 'amazon_uk':
+            r = requests.get(url, headers=constant.AMAZON_HEADERS_UK)
+            if r.status_code == 200:
+                data['prode'] = ''
+                html = pq(r.text)
+                data = self.get_amazon_data(data, html)
+                return data
+            else:
+                return data
         else:
             return data
 
