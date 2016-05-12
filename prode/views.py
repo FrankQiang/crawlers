@@ -374,7 +374,14 @@ class Index(APIView):
             else:
                 return data
         elif source == 'amazon_uk':
-            return data
+            r = requests.get(url, headers=constant.AMAZON_HEADERS_UK)
+            if r.status_code == 200:
+                data['results'] = {}
+                html = pq(r.text)
+                data = self.get_amazon_data(data, html)
+                return data
+            else:
+                return data
         else:
             return data
 
@@ -382,15 +389,18 @@ class Index(APIView):
         if request.GET.get('source'):
             source = request.GET.get('source')
         else:
-            pass
-        source = 'amazon_us'
+            source = 'amazon_us'
+        if source == 'amazon_uk':
+            url = constant.AMAZON_INDEX_UK
+        else:
+            url = constant.AMAZON_INDEX_US
 
         data = {}
         for time in range(constant.REQUEST_TIMES):
             if data:
                 break
             else:
-                data = self.get_data(constant.AMAZON_INDEX_US, source)
+                data = self.get_data(url, source)
         return Response(data)
 
 
