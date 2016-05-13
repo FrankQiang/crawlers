@@ -324,7 +324,13 @@ class Single(APIView):
                     goods.specs.append(specs)
             try:
                 goods.save()
-                content = {'url': url}
+                goods_data = GoodsSerializer(goods).data
+                goods_url = goods_data['goods_url']
+                if goods_url.find('.com/') > 0:
+                    goods_data['url'] = goods_url.split('.com/')[1]
+                elif goods_url.find('.co.uk/') > 0:
+                    goods_data['url'] = goods_url.split('.co.uk/')[1]
+                content = {'results': goods_data}
                 re_status = status.HTTP_200_OK
             except NotUniqueError:
                 content = {'mes': 'Goods alread exist'}
