@@ -357,8 +357,13 @@ class Index(APIView):
                 data['results'][i]['goods_price'] = goods_price
                 data['results'][i]['local_url'] = constant.SINGLE_URL+goods_url
                 data['results'][i]['goods_img_url'] = goods_img_url
-                if len(goods_url.split('.com/')) > 1:
+                if goods_url.find('.com/') > 0:
                     data['results'][i]['url'] = goods_url.split('.com/')[1]
+                elif goods_url.find('.co.uk/') > 0:
+                    data['results'][i]['url'] = goods_url.split('.co.uk/')[1]
+                else:
+                    data['results'].pop(i)
+                    continue
                 i += 1
         return data
 
