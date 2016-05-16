@@ -283,6 +283,12 @@ class Single(APIView):
         else:
             content = {'mes': 'Not url'}
             return Response(status.HTTP_400_BAD_REQUEST)
+        keep_goods = Goods.objects.get(goods_url=url)
+        if keep_goods:
+            goods_data = GoodsSerializer(keep_goods).data
+            goods_data['price_history'] = []
+            content = {'results': goods_data}
+            return Response(content, status=status.HTTP_200_OK)
 
         if request.GET.get('source'):
             source = request.GET.get('source')

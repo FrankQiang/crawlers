@@ -32,8 +32,8 @@ class PriceHistory(EmbeddedDocument):
 
 class Goods(Document):
     source = fields.StringField(max_length=50)
-    goods_id = fields.StringField(max_length=64, unique=True)
-    goods_url = fields.StringField(max_length=1024)
+    goods_id = fields.StringField(max_length=64)
+    goods_url = fields.StringField(max_length=1024, unique=True)
     title = fields.StringField(max_length=1024)
     goods_type = fields.StringField(max_length=50)
     country = fields.StringField(max_length=100)
