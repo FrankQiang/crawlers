@@ -331,15 +331,11 @@ class Single(APIView):
                 elif goods_url.find('.co.uk/') > 0:
                     goods_data['url'] = goods_url.split('.co.uk/')[1]
                 content = {'results': goods_data}
-                re_status = status.HTTP_200_OK
             except NotUniqueError:
                 content = {'mes': 'Goods alread exist'}
-                re_status = status.HTTP_500_INTERNAL_SERVER_ERROR
         else:
             content = {'mes': 'Get data error'}
-            re_status = status.HTTP_500_INTERNAL_SERVER_ERROR
-
-        return Response(content, status=re_status)
+        return Response(content, status=status.HTTP_200_OK)
 
 
 class Index(APIView):
