@@ -289,6 +289,11 @@ class Single(APIView):
             keep_goods = Goods.objects.get(goods_url=url)
             goods_data = GoodsSerializer(keep_goods).data
             goods_data['price_history'] = []
+            goods_url = goods_data['goods_url']
+            if goods_url.find('.com/') > 0:
+                goods_data['url'] = goods_url.split('.com/')[1]
+            elif goods_url.find('.co.uk/') > 0:
+                goods_data['url'] = goods_url.split('.co.uk/')[1]
             content = {'results': goods_data}
             return Response(content, status=status.HTTP_200_OK)
 
