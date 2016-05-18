@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from django.core.paginator import Paginator
+from dateutil.parser import parse
 from prode.models import Goods, Sku, Specs
 from flash import constant
 from prode.serializers import GoodsSerializer
@@ -463,6 +464,12 @@ class History(APIView):
             page_total = paginator.num_pages
             page_each = paginator.page(page)
             page_data = page_each.object_list
+            for peer_page_data in page_data:
+                time = parse(peer_page_data['pub_date'])
+                peer_page_data['pub_date'] = time.strftime("%Y-%m-%d")
+                for currency in constant.CURRENCY:
+                    peer_page_data['price'] = peer_page_data['price'].replace(
+                        currency, '')
             data = {}
             data['page_total'] = [page_total]
             data['results'] = page_data

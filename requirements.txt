@@ -8,3 +8,4 @@ pyquery==1.2.13
 requests==2.2.1
 uWSGI==2.0.12
 djangorestframework-jsonp==1.0.2
+python-dateutil==2.5.3
