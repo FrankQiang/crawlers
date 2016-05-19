@@ -42,7 +42,6 @@ class GoodsList(APIView):
             return False
 
     def get_amazon_data(self, data, html, source):
-        i = 0
         goods_ul = html('#s-results-list-atf')
         if not goods_ul:
             return data
@@ -52,7 +51,7 @@ class GoodsList(APIView):
         for result_num in range(goods_li_first_num, goods_li_last_num):
             goods_li = pq(html('#result_'+str(result_num)))
             if goods_li:
-                data['results'][i] = {}
+                result = {}
                 goods_img = pq(goods_li('img'))
                 goods_a = pq(goods_li('img').parents('a'))
                 goods_url = pq(goods_a('a')).attr('href')
@@ -64,33 +63,32 @@ class GoodsList(APIView):
                 for goods_price_span in goods_price_spans:
                     goods_price = pq(goods_price_span).text()
                     if self.valid_price(goods_price):
-                        data['results'][i]['goods_price'] = goods_price
+                        result['goods_price'] = goods_price
                         continue
                     else:
-                        data['results'][i]['goods_price'] = 0.00
+                        result['goods_price'] = 0.00
 
                 goods_des = goods_li('em').parents('span').text()
 
                 goods_large_img_url = goods_small_img_url.replace(
                     constant.AMAZON_iMG_SMA_SIZE, constant.AMAZON_iMG_MED_SIZE
                 )
-                data['results'][i]['local_url'] = constant.SINGLE_URL.format(
+                result['local_url'] = constant.SINGLE_URL.format(
                     url=goods_url,
                     source=source,
                 )
                 if goods_url.find('.com/') > 0:
-                    data['results'][i]['url'] = goods_url.split('.com/')[1]
+                    result['url'] = goods_url.split('.com/')[1]
                 elif goods_url.find('.co.uk/') > 0:
-                    data['results'][i]['url'] = goods_url.split('.co.uk/')[1]
+                    result['url'] = goods_url.split('.co.uk/')[1]
                 else:
-                    data['results'].pop(i)
                     continue
 
-                data['results'][i]['goods_s_img_url'] = goods_small_img_url
-                data['results'][i]['goods_l_img_url'] = goods_large_img_url
-                data['results'][i]['goods_title'] = goods_title
-                data['results'][i]['goods_des'] = goods_des
-                i += 1
+                result['goods_s_img_url'] = goods_small_img_url
+                result['goods_l_img_url'] = goods_large_img_url
+                result['goods_title'] = goods_title
+                result['goods_des'] = goods_des
+                data['results'].append(result)
         data['brand'] = []
         brands = pq(html('#ref_2528832011'))
         if not brands:
@@ -128,7 +126,7 @@ class GoodsList(APIView):
         if source == 'amazon_us':
             r = requests.get(url, headers=constant.AMAZON_HEADERS_US)
             if r.status_code == 200:
-                data['results'] = {}
+                data['results'] = []
                 html = pq(r.text)
                 data = self.get_amazon_data(data, html, source)
                 return data
@@ -137,7 +135,7 @@ class GoodsList(APIView):
         elif source == 'amazon_uk':
             r = requests.get(url, headers=constant.AMAZON_HEADERS_UK)
             if r.status_code == 200:
-                data['results'] = {}
+                data['results'] = []
                 html = pq(r.text)
                 data = self.get_amazon_data(data, html, source)
                 return data
