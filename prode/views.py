@@ -280,7 +280,7 @@ class Single(APIView):
 
     def get(self, request, format=None):
         if request.GET.get('url'):
-            url = request.GET.get('url')
+            url = request.GET.get('url').split('/ref')[0]
         else:
             content = {'mes': 'Not url'}
             return Response(status.HTTP_400_BAD_REQUEST)
