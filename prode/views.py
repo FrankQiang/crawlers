@@ -454,7 +454,11 @@ class History(APIView):
             page = 1
         if request.GET.get('id'):
             id = request.GET.get('id')
-            goods = Goods.objects.get(id=id)
+            try:
+                goods = Goods.objects.get(id=id)
+            except:
+                content = {'mes': 'Not Found'}
+                return Response(content, status=status.HTTP_404_NOT_FOUND)
             goods_data = GoodsSerializer(goods).data
             price_all_data = goods_data['price_history']
             page_size = constant.PAGE_SIZE
