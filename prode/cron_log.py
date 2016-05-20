@@ -10,10 +10,10 @@ class Amazon(object):
     def handle(self):
         probability = 0.5
         if probability > random.random():
-            url = constant.AMAZON_HOST_US
+            url = constant.AMAZON_HOST_US+'/Apple-iPhone-Unlocked-Gold-16GB/dp/B00VHSXBUA'
             source = 'amazon_us'
         else:
-            url = constant.AMAZON_HOST_UK
+            url = constant.AMAZON_HOST_UK+'/Apple-iPhone-16GB-Unlocked-Space/dp/B00F3J2ITY'
             source = 'amazon_uk'
 
         data = self.get_data(url, source)
