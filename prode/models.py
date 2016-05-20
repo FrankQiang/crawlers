@@ -30,6 +30,13 @@ class PriceHistory(EmbeddedDocument):
     pub_date = fields.DateTimeField(default=datetime.datetime.now)
 
 
+class Log(Document):
+    source = fields.StringField()
+    request_times = fields.IntField()
+    error_times = fields.IntField()
+    success_times = fields.IntField()
+
+
 class Goods(Document):
     source = fields.StringField(max_length=50)
     goods_id = fields.StringField(max_length=64)
