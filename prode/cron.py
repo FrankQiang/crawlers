@@ -43,7 +43,7 @@ class Amazon(object):
                     sku['union_type'] = []
                     sku['union_type'].append(goods_color)
                     data['sku'].append(sku)
-        if not data.get('goods_price') and data['sku']:
+        if not data.get('goods_price') and data.get('sku'):
             data['goods_price'] = data['sku'][0]['price']
 
         return data

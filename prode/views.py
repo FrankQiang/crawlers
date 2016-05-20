@@ -211,7 +211,7 @@ class Single(APIView):
         data['goods_type'] = goods_type
         data['goods_price'] = goods_price
         data['goods_brand'] = goods_brand
-        if len(data['goods_imgs']) > 1:
+        if len(data.get('goods_imgs')) > 1:
             data['goods_img_url'] = data['goods_imgs'][0]
         else:
             data['goods_img_url'] = ''
@@ -307,37 +307,37 @@ class Single(APIView):
                 break
             else:
                 data = self.get_data(url, source)
-        if not data.get('goods_price') and data.get('sku'):
+        if not data.get('goods_price') and len(data.get('sku')) > 1:
             data['goods_price'] = data['sku'][0]['price']
 
         if data and data.get('goods_price'):
             goods = Goods(
                 source=source,
-                goods_id=data['id'],
+                goods_id=data.get('id'),
                 goods_url=url,
-                title=data['goods_title'],
-                goods_type=data['goods_type'],
-                price=data['goods_price'],
-                image_link=data['goods_img_url'],
-                brand=data['goods_brand'],
-                images=data['goods_imgs']
+                title=data.get('goods_title'),
+                goods_type=data.get('goods_type'),
+                price=data.get('goods_price'),
+                image_link=data.get('goods_img_url'),
+                brand=data.get('goods_brand'),
+                images=data.get('goods_imgs')
             )
             if data.get('sku'):
-                for sku_data in data['sku']:
+                for sku_data in data.get('sku'):
                     sku = Sku(
-                        union_type=sku_data['union_type'],
-                        price=sku_data['price']
+                        union_type=sku_data.get('union_type'),
+                        price=sku_data.get('price')
                     )
                     goods.sku.append(sku)
 
             if data.get('params'):
-                for param in data['params']:
+                for param in data.get('params'):
                     specs = Specs(params_title=param[0], params_con=param[1])
                     goods.specs.append(specs)
             try:
                 goods.save()
                 goods_data = GoodsSerializer(goods).data
-                goods_url = goods_data['goods_url']
+                goods_url = goods_data.get('goods_url')
                 if goods_url.find('.com/') > 0:
                     goods_data['url'] = goods_url.split('.com/')[1]
                 elif goods_url.find('.co.uk/') > 0:
@@ -460,18 +460,18 @@ class History(APIView):
                 content = {'mes': 'Not Found'}
                 return Response(content, status=status.HTTP_404_NOT_FOUND)
             goods_data = GoodsSerializer(goods).data
-            price_all_data = goods_data['price_history']
+            price_all_data = goods_data.get('price_history')
             page_size = constant.PAGE_SIZE
             paginator = Paginator(price_all_data, page_size)
             page_total = paginator.num_pages
             page_each = paginator.page(page)
             page_data = page_each.object_list
             for peer_page_data in page_data:
-                time = parse(peer_page_data['pub_date'])
+                time = parse(peer_page_data.get('pub_date'))
                 peer_page_data['pub_date'] = time.strftime("%Y-%m-%d")
                 for currency in constant.CURRENCY:
-                    peer_page_data['price'] = peer_page_data['price'].replace(
-                        currency, '')
+                    price = peer_page_data.get('price').replace(currency, '')
+                    peer_page_data['price'] = price
             data = {}
             data['page_total'] = [page_total]
             data['results'] = page_data
