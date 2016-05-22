@@ -1,4 +1,5 @@
 import requests
+import time
 from pyquery import PyQuery as pq
 from mongoengine import NotUniqueError
 from rest_framework.views import APIView
@@ -173,10 +174,12 @@ class GoodsList(APIView):
         url = self.get_url(keywords, page, brand, sort, source)
 
         data = {}
-        for time in range(constant.REQUEST_TIMES):
+        for t in range(constant.REQUEST_TIMES):
             if data:
                 break
             else:
+                if t > 0:
+                    time.sleep(constant.INTERVAL_TIME)
                 data = self.get_data(url, source)
 
         return Response(data)
@@ -302,10 +305,12 @@ class Single(APIView):
             source = 'amazon_us'
 
         data = {}
-        for time in range(constant.REQUEST_TIMES):
+        for t in range(constant.REQUEST_TIMES):
             if data:
                 break
             else:
+                if t > 0:
+                    time.sleep(constant.INTERVAL_TIME)
                 data = self.get_data(url, source)
         if not data.get('goods_price') and len(data.get('sku')) > 1:
             data['goods_price'] = data['sku'][0]['price']
@@ -415,10 +420,12 @@ class Index(APIView):
             url = constant.AMAZON_INDEX_US
 
         data = {}
-        for time in range(constant.REQUEST_TIMES):
+        for t in range(constant.REQUEST_TIMES):
             if data:
                 break
             else:
+                if t > 0:
+                    time.sleep(constant.INTERVAL_TIME)
                 data = self.get_data(url, source)
         return Response(data)
 

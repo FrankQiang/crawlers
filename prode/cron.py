@@ -1,4 +1,5 @@
 import requests
+import time
 from pyquery import PyQuery as pq
 from prode.models import Goods, PriceHistory
 from flash import constant
@@ -10,10 +11,12 @@ class Amazon(object):
         goods = Goods.objects.all()
         for per_goods in goods:
             data = {}
-            for time in range(constant.REQUEST_TIMES):
+            for t in range(constant.REQUEST_TIMES):
                 if data:
                     break
                 else:
+                    if t > 0:
+                        time.sleep(constant.INTERVAL_TIME)
                     data = self.get_data(per_goods.goods_url, per_goods.source)
             if data and data.get('price'):
                 price = PriceHistory(price=data['price'])
