@@ -175,7 +175,7 @@ class GoodsList(APIView):
 
         data = {}
         for t in range(constant.REQUEST_TIMES):
-            if data:
+            if data and data.get('results'):
                 break
             else:
                 if t > 0:
@@ -306,7 +306,7 @@ class Single(APIView):
 
         data = {}
         for t in range(constant.REQUEST_TIMES):
-            if data:
+            if data and data.get('results'):
                 break
             else:
                 if t > 0:
@@ -421,7 +421,7 @@ class Index(APIView):
 
         data = {}
         for t in range(constant.REQUEST_TIMES):
-            if data:
+            if data and data.get('results'):
                 break
             else:
                 if t > 0:

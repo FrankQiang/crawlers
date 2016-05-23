@@ -12,7 +12,7 @@ class Amazon(object):
         for per_goods in goods:
             data = {}
             for t in range(constant.REQUEST_TIMES):
-                if data:
+                if data and data.get('price'):
                     break
                 else:
                     if t > 0:
