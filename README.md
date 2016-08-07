@@ -6,7 +6,7 @@
 
     pip install virtualenv
 
-    git clone  git@bitbucket.org:yank_lu/flash.git
+    git clone
 
     # flash 目录下
 
